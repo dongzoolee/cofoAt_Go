@@ -2,6 +2,7 @@ package getData
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -47,6 +48,32 @@ type ContestInfo struct {
 		RelativeTimeSeconds int
 	}
 }
+type UserCng struct {
+	Status string `json:"status"`
+	Result []struct {
+		ContestID               int    `json:"contestId"`
+		ContestName             string `json:"contestName"`
+		Handle                  string `json:"handle"`
+		Rank                    int    `json:"rank"`
+		RatingUpdateTimeSeconds int    `json:"ratingUpdateTimeSeconds"`
+		OldRating               int    `json:"oldRating"`
+		NewRating               int    `json:"newRating"`
+	} `json:"result"`
+}
+
+type ContCng struct {
+	Status  string `json:"status"`
+	Comment string `json:"comment`
+	Result  []struct {
+		ContestID               int    `json:"contestId"`
+		ContestName             string `json:"contestName"`
+		Handle                  string `json:"handle"`
+		Rank                    int    `json:"rank"`
+		RatingUpdateTimeSeconds int    `json:"ratingUpdateTimeSeconds"`
+		OldRating               int    `json:"oldRating"`
+		NewRating               int    `json:"newRating"`
+	} `json:"result"`
+}
 
 func ErrCheck(e error) {
 	if e != nil {
@@ -83,4 +110,33 @@ func GetTier(id string) UserTier {
 	ret.Rank = data.Result[0].Rank
 	ret.Rating = data.Result[0].Rating
 	return *ret
+}
+func GetUserCng(id string) {
+	resp, err := http.Get("https://codeforces.com/api/user.rating?handle=" + id)
+	ErrCheck(err)
+	defer resp.Body.Close()
+
+	cont, err := ioutil.ReadAll(resp.Body)
+	ErrCheck(err)
+	data := new(UserCng)
+	json.Unmarshal([]byte(cont), &data)
+
+	fmt.Println(data.Result[len(data.Result)-1])
+}
+func GetContCng(contId string) {
+	resp, err := http.Get("https://codeforces.com/api/contest.ratingChanges?contestId=" + contId)
+	ErrCheck(err)
+	defer resp.Body.Close()
+
+	cont, err := ioutil.ReadAll(resp.Body)
+	ErrCheck(err)
+
+	data := new(ContCng)
+	json.Unmarshal([]byte(cont), &data)
+
+	if data.Comment != "" {
+		fmt.Println("not done")
+	} else {
+		fmt.Println("done")
+	}
 }
